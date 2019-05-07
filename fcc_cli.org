@@ -25,6 +25,10 @@ https://www.freecodecamp.org/forum/categories.json
 #+END_QUOTE
 
 
+* Diagram 
+
+[[file:chart.png]]
+ 
 *  JS 
 
 ** options
@@ -373,6 +377,7 @@ echo '';
 Comments: 
 
  - Duplicate key 'scrollbar': this line enable the scrollbar. 
+
 
 * prettier
 
