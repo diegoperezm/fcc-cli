@@ -71,6 +71,8 @@ const box = blessed.box(boxOptions);
 const htmlToText = require("html-to-text");
 const Machine = require("xstate").Machine;
 const interpret = require("xstate").interpret;
+const actions = require("xstate").actions;
+const assign = actions.assign;
 const urlCategories = "https://www.freecodecamp.org/forum/c/";
 const urlPost = "https://www.freecodecamp.org/forum/t/";
 const spc = "            ";
@@ -109,7 +111,7 @@ table.on("select", async function(key) {
     ? b.replace(/-/gi, "").toUpperCase()
     : "POST";
 
-  service.send(input);
+  service.send({ type: input, visitedCategory: b });
 });
 
 const statechart = Machine(
@@ -117,7 +119,7 @@ const statechart = Machine(
     id: "statechartID",
     initial: "first",
     context: {
-      data: "data"
+      visitedCategory: ""
     },
     states: {
       first: {
@@ -132,42 +134,81 @@ const statechart = Machine(
         id: "homeID",
         on: {
           PROJECTFEEDBACK: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           GETTINGADEVELOPERJOB: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           MOTIVATION: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           JAVASCRIPT: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           HTMLCSS: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           HELP: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           LINUXANDGIT: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           PYTHON: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           DATA: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           CONTRIBUTORS: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           REVIEWS: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           SUPPORT: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           },
           GENERAL: {
+            actions: assign({
+              visitedCategory: (ctx, event) => event.visitedCategory
+            }),
             target: "postslist"
           }
         }
@@ -189,8 +230,7 @@ const statechart = Machine(
         onEntry: [displayPost],
         on: {
           H: {
-            target: "home",
-            actions: [home]
+            target: "postslist"
           }
         }
       }
@@ -227,14 +267,14 @@ function home(arg) {
   screen.render();
 }
 
-async function displayList() {
-  let a = table.getItem(table.selected);
-  let b = a.getContent().trimEnd();
-  let c = await got(`${urlCategories}${b}.json`, gotOptions);
+async function displayList(ctx) {
+  let a = ctx.visitedCategory;
+  let c = await got(`${urlCategories}${a}.json`, gotOptions);
   let d = await c.body.topic_list.topics;
   let e = d.map(elem => [`${elem.slug}`]);
 
-  table.setData([[`${b.toUpperCase()}${keyBindingInfo}`]].concat(e));
+  box.hide();
+  table.setData([[`${a.toUpperCase()}${keyBindingInfo}`]].concat(e));
   table.show();
   table.focus();
   screen.render();
