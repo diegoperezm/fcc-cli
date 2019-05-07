@@ -326,6 +326,7 @@ async function displayList(ctx) {
  let e   = d.map(elem => [`${elem.slug}`]);
  
  box.hide();
+ box.resetScroll();
  table.setData([[`${a.toUpperCase()}${keyBindingInfo}`]].concat(e)); 
  table.show();
  table.focus();
