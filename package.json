@@ -1,0 +1,23 @@
+{
+  "name": "fcc_cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prettier": "gulp prettier",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "got": "^9.6.0",
+    "html-to-text": "^5.1.1",
+    "xstate": "^4.5.0"
+  },
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-prettier": "^2.1.0"
+  }
+}
