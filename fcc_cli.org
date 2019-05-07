@@ -339,12 +339,15 @@ async function displayPost() {
  let b        = a.getContent().trimEnd();
  let c        = await  got(`${urlPost}${b}.json`, gotOptions);
  let d        = await  c.body.post_stream.posts;
+ let title    = `{green-fg}{bold}${c.body.fancy_title}{/bold}{/green-fg}\n`;
+ let keysInfo = `{right}q=quit h=back j=↓ k=↑{/right}`;
  let arr      = d.map(elem =>`<h2>${elem.username}</h2>${elem.cooked}<br>`);
  let text     = arr.toString();
  let textS    = htmlToText.fromString( text, {wordwrap: false});
 
  table.hide();
  box.setContent(textS);
+ box.insertTop(`${keysInfo}\n${title}`);
  box.show();
  box.focus();
  screen.render(); 
