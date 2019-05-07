@@ -1,0 +1,23 @@
+#+PROPERTY: header-args :results verbatim
+
+* Setup
+
+** Dependencies
+
+ - blessed
+
+ - got
+
+ - gulp
+
+ - gulp-prettier
+
+ - html-to-text
+
+ * Xstate
+
+
+* Demo
+
+
+[[https://youtu.be/6tvkeIEBtds][Video Link]] 
