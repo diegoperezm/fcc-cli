@@ -63,11 +63,33 @@ const boxOptions = {
     }
   }
 };
+
+const loadingBoxOptions = {
+  tags: true,
+  content: "{center}{yellow-fg}Loading ...{/}",
+  top: "20%",
+  left: "center",
+  width: "20%",
+  height: "15%",
+  draggable: true,
+  border: {
+    type: "line"
+  },
+  style: {
+    fg: "white",
+    bg: "black",
+    border: {
+      fg: "#f0f0f0"
+    }
+  }
+};
+
 const got = require("got");
 const blessed = require("blessed");
 const screen = blessed.screen(screenOptions);
 const table = blessed.listtable(tableOptions);
 const box = blessed.box(boxOptions);
+const loadingBox = blessed.box(loadingBoxOptions);
 const htmlToText = require("html-to-text");
 const Machine = require("xstate").Machine;
 const interpret = require("xstate").interpret;
@@ -251,6 +273,7 @@ service.start();
 
 function initial() {
   let a = [[`CATEGORIES${keyBindingInfo}`]].concat(arr);
+  screen.append(loadingBox);
   screen.append(box);
   screen.append(table);
   table.focus();
