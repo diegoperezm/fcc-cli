@@ -287,7 +287,7 @@ async function displayPost() {
   let c = await got(`${urlPost}${b}.json`, gotOptions);
   let d = await c.body.post_stream.posts;
   let title = `{yellow-fg}{bold}${c.body.fancy_title}{/bold}{/yellow-fg}\n`;
-  let keysInfo = `{right}q=quit h=back j=↓ k=↑{/right}`;
+  let keysInfo = `{right}{green-fg}q=quit h=back j=↓ k=↑{/green-fg}{/right}`;
   let arr = d.map(elem => `<h2>${elem.username}</h2><br>${elem.cooked}<br>`);
   let text = arr.toString();
   let textS = htmlToText.fromString(text, {
