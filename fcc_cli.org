@@ -386,9 +386,10 @@ service.start();
 
 function initial() {
  let a = [[`CATEGORIES${keyBindingInfo}`]].concat(arr);
- screen.append(loadingBox);
  screen.append(box); 
  screen.append(table);
+ screen.append(loadingBox);
+ loadingBox.hide();
  table.focus();
  table.setData(a); 
  screen.render();

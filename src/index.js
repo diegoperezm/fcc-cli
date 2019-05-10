@@ -249,13 +249,24 @@ const statechart = Machine(
 );
 
 const service = interpret(statechart);
+/*
+ .onTransition(state => { 
+ let currentState = state.value;
+ let query        = state.context.query;
+ let text = `state: ${currentState},${query}`; 
+ loadingBox.show();
+ loadingBox.setContent(text);
+ });
+*/
+
 service.start();
 
 function initial() {
   let a = [[`CATEGORIES${keyBindingInfo}`]].concat(arr);
-  screen.append(loadingBox);
   screen.append(box);
   screen.append(table);
+  screen.append(loadingBox);
+  loadingBox.hide();
   table.focus();
   table.setData(a);
   screen.render();
