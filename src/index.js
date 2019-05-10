@@ -115,6 +115,16 @@ const arr = [
   ["general"]
 ];
 
+const fetchCategory = ctx => {
+  let url = `${urlCategories}${ctx.query}.json`;
+  return got(url, gotOptions).then(response => response.body);
+};
+
+const fetchPost = ctx => {
+  let url = `${urlPost}${ctx.query}.json`;
+  return got(url, gotOptions).then(response => response.body);
+};
+
 // Quit on Escape, q, or Control-C.
 screen.key(["escape", "q", "C-c"], function(ch, key) {
   return process.exit(0);
@@ -125,15 +135,11 @@ screen.key(["h"], function(ch, key) {
   service.send("H");
 });
 
-table.on("select", async function(key) {
+table.on("select", function(key) {
   let a = table.getItem(table.selected);
   let b = a.getContent().trimEnd();
 
-  let input = arr.flat().includes(b)
-    ? b.replace(/-/gi, "").toUpperCase()
-    : "POST";
-
-  service.send({ type: input, visitedCategory: b });
+  service.send({ type: "FETCH", query: b });
 });
 
 const statechart = Machine(
@@ -141,7 +147,10 @@ const statechart = Machine(
     id: "statechartID",
     initial: "first",
     context: {
-      visitedCategory: ""
+      error: "",
+      datapost: "",
+      datalist: "",
+      query: ""
     },
     states: {
       first: {
@@ -155,91 +164,61 @@ const statechart = Machine(
       home: {
         id: "homeID",
         on: {
-          PROJECTFEEDBACK: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
+          FETCH: {
+            target: "loadingcategory",
+            actions: [assign({ query: (ctx, event) => event.query })]
+          }
+        }
+      },
+      loadingcategory: {
+        invoke: {
+          id: "getcatID",
+          src: (ctx, event) => fetchCategory(ctx, event),
+          onDone: {
+            target: "successcategory",
+            actions: assign({ datalist: (ctx, event) => event.data })
           },
-          GETTINGADEVELOPERJOB: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
+          onError: {
+            target: "failure",
+            actions: assign({ error: (ctx, event) => event.data })
+          }
+        }
+      },
+      loadingpost: {
+        invoke: {
+          id: "getpostID",
+          src: (ctx, event) => fetchPost(ctx, event),
+          onDone: {
+            target: "successpost",
+            actions: [assign({ datapost: (ctx, event) => event.data })]
           },
-          MOTIVATION: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          JAVASCRIPT: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          HTMLCSS: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          HELP: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          LINUXANDGIT: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          PYTHON: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          DATA: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          CONTRIBUTORS: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          REVIEWS: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          SUPPORT: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
-            target: "postslist"
-          },
-          GENERAL: {
-            actions: assign({
-              visitedCategory: (ctx, event) => event.visitedCategory
-            }),
+          onError: {
+            target: "failure",
+            actions: assign({ error: (ctx, event) => event.data })
+          }
+        }
+      },
+      successcategory: {
+        on: {
+          "": {
             target: "postslist"
           }
         }
       },
+      successpost: {
+        on: {
+          "": {
+            target: "post"
+          }
+        }
+      },
+      failure: {},
       postslist: {
         onEntry: [displayList],
         on: {
-          POST: {
-            target: "post"
+          FETCH: {
+            target: "loadingpost",
+            actions: assign({ query: (ctx, event) => event.query })
           },
           H: {
             target: "home",
@@ -256,10 +235,11 @@ const statechart = Machine(
           }
         }
       }
-    } // ./states
+    }
   },
   {
     actions: {
+      displayLoading: displayLoading,
       displayList: displayList,
       displayPost: displayPost,
       initial: initial,
@@ -290,10 +270,17 @@ function home(arg) {
   screen.render();
 }
 
-async function displayList(ctx) {
-  let a = ctx.visitedCategory;
-  let c = await got(`${urlCategories}${a}.json`, gotOptions);
-  let d = await c.body.topic_list.topics;
+function displayLoading(ctx) {
+  loadingBox.show();
+}
+
+function hideLoading() {
+  loadingBox.hide();
+}
+
+function displayList(ctx) {
+  let a = ctx.query;
+  let d = ctx.datalist.topic_list.topics;
   let e = d.map(elem => [`${elem.slug}`]);
 
   box.hide();
@@ -304,12 +291,9 @@ async function displayList(ctx) {
   screen.render();
 }
 
-async function displayPost() {
-  let a = table.getItem(table.selected);
-  let b = a.getContent().trimEnd();
-  let c = await got(`${urlPost}${b}.json`, gotOptions);
-  let d = await c.body.post_stream.posts;
-  let title = `{yellow-fg}{bold}${c.body.fancy_title}{/bold}{/yellow-fg}\n`;
+function displayPost(ctx) {
+  let d = ctx.datapost.post_stream.posts;
+  let title = `{yellow-fg}{bold}${ctx.datapost.title}{/bold}{/yellow-fg}\n`;
   let keysInfo = `{right}{green-fg}q=quit h=back j=↓ k=↑{/green-fg}{/right}`;
   let arr = d.map(elem => `<h2>${elem.username}</h2><br>${elem.cooked}<br>`);
   let text = arr.toString();

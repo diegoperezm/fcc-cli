@@ -29,6 +29,7 @@ https://www.freecodecamp.org/forum/categories.json
 
 [[file:chart.png]]
  
+
 *  JS 
 
 ** options
@@ -122,8 +123,17 @@ const  loadingBoxOptions = {
 #+END_SRC
 
 ** setup
-#+NAME: setup
+   
+#+NAME:statechartsetup
 #+BEGIN_SRC js
+const Machine        = require('xstate').Machine;
+const interpret      = require('xstate').interpret;
+const actions        = require('xstate').actions;
+const assign         = actions.assign;
+#+END_SRC
+
+#+NAME: setup
+#+BEGIN_SRC js :noweb yes
 const got            = require('got');
 const blessed        = require('blessed');
 const screen         = blessed.screen(screenOptions);
@@ -131,10 +141,7 @@ const table          = blessed.listtable(tableOptions);
 const box            = blessed.box(boxOptions);
 const loadingBox     = blessed.box(loadingBoxOptions);
 const htmlToText     = require('html-to-text');
-const Machine        = require('xstate').Machine;
-const interpret      = require('xstate').interpret;
-const actions        = require('xstate').actions;
-const assign         = actions.assign;
+<<statechartsetup>>
 const urlCategories  = 'https://www.freecodecamp.org/forum/c/';
 const urlPost        = 'https://www.freecodecamp.org/forum/t/';
 const spc            = '            ';
@@ -155,6 +162,18 @@ const   arr = [
  ['general'],
  ];
 
+const fetchCategory = (ctx) =>{
+ let url = `${urlCategories}${ctx.query}.json` ;
+ return  got(url , gotOptions).then(response => response.body);
+}
+
+const fetchPost     = (ctx) =>{
+ let url = `${urlPost}${ctx.query}.json` ;
+ return  got(url , gotOptions).then(response => response.body);
+}
+
+
+
 // Quit on Escape, q, or Control-C.
 screen.key(['escape', 'q', 'C-c'], function(ch, key) {
   return process.exit(0);
@@ -166,133 +185,130 @@ screen.key(['h'], function(ch, key) {
 });
 
 
-table.on('select', async function (key) {
- let a     = table.getItem(table.selected);
- let b     = a.getContent().trimEnd();
+table.on('select', function (key) {
+ let a      = table.getItem(table.selected);
+ let b      = a.getContent().trimEnd();
 
- let input = arr.flat().includes(b) 
-                 ? b.replace(/-/gi,'').toUpperCase()
-                 : 'POST';
-
- service.send({type: input, visitedCategory: b });
+service.send({type:'FETCH', query: b});
 });
 
 #+END_SRC
 
 ** statechart 
-#+NAME: statechart
+
+*** states 
+    
+#+NAME: first
 #+BEGIN_SRC js
-const statechart = Machine(
-{
- id: 'statechartID',
- initial:'first',
- context: {
-  visitedCategory: ''
- },
- states: {
   first: {
    onEntry: [initial], 
    on: {
     '': {
      target: 'home'
     }
-   }
+   },
   },
+#+END_SRC
+
+#+NAME: home
+#+BEGIN_SRC js
   home: {
    id: 'homeID',
    on: {
-     PROJECTFEEDBACK: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     GETTINGADEVELOPERJOB: {
-      actions: assign(
-        { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     MOTIVATION: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     JAVASCRIPT: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     HTMLCSS: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     HELP: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     LINUXANDGIT: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     PYTHON: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     DATA: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     CONTRIBUTORS: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     REVIEWS: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     SUPPORT: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
-     },
-     GENERAL: {
-      actions: assign(
-         { visitedCategory: (ctx, event) => event.visitedCategory}
-      ),
-      target: 'postslist'
+   FETCH: {
+      target: 'loadingcategory',
+      actions: [assign({ query: (ctx, event) => event.query})]
     },
+   },
+  },
+#+END_SRC
+
+
+#+NAME:loadingcategory
+#+BEGIN_SRC js
+   loadingcategory: {
+     invoke: {
+        id: 'getcatID',
+        src: (ctx, event) => fetchCategory(ctx, event),
+        onDone: {
+          target: 'successcategory',
+          actions: assign({ datalist: (ctx, event) => event.data}),
+        },
+        onError: {
+          target: 'failure',
+          actions: assign({ error: (ctx, event) =>  event.data})
+        },
+      },
+    },
+#+END_SRC
+
+#+NAME:successcategory
+#+BEGIN_SRC js
+ successcategory: {
+   on: {
+    '': {
+    target: 'postslist' 
+    }
    }
- },
+  },
+   #+END_SRC
+
+#+NAME:failure
+#+BEGIN_SRC js
+   failure: {},
+#+END_SRC
+
+#+NAME:postslist
+#+BEGIN_SRC js
   postslist:{
    onEntry: [displayList], 
    on: {
-    POST: {
-     target: 'post'
+    FETCH: {
+      target: 'loadingpost',
+      actions: assign({ query: (ctx, event) => event.query})
     },
-    H: {
+   H: {
      target: "home",
      actions: [home]
     }
    }
   },
+#+END_SRC
+
+#+NAME:loadingpost
+#+BEGIN_SRC js
+   loadingpost: {
+     invoke: {
+        id: 'getpostID',
+        src: (ctx, event) => fetchPost(ctx, event),
+        onDone: {
+          target: 'successpost',
+          actions:  [
+	       assign({ datapost: (ctx, event) => event.data}),
+	       ]
+        },
+        onError: {
+          target: 'failure',
+          actions: assign({ error: (ctx, event) => event.data})
+        },
+      },
+    },
+#+END_SRC
+
+
+#+NAME:successpost
+#+BEGIN_SRC js
+  successpost: {
+   on: {
+    '': {
+    target: 'post' 
+    }
+   }
+  },
+#+END_SRC
+
+#+NAME:post
+#+BEGIN_SRC js
   post: {
    id:'postID',
    onEntry:[displayPost], 
@@ -302,21 +318,63 @@ const statechart = Machine(
     }
    }
   },
-  } // ./states
+#+END_SRC
+
+#+NAME:context
+#+BEGIN_SRC js
+ context: {
+  error: '',
+  datapost: '',
+  datalist: '', 
+  query: '',
+ },
+#+END_SRC
+
+#+NAME: statechart
+#+BEGIN_SRC js :noweb yes
+const statechart = Machine(
+{
+ id: 'statechartID',
+ initial:'first',
+ <<context>>
+ states: {
+<<first>>
+<<home>>
+<<loadingcategory>>
+<<loadingpost>>
+<<successcategory>>
+<<successpost>>
+<<failure>>
+<<postslist>>
+<<post>>
+ }
 }, 
  {
   actions: {
+    displayLoading: displayLoading,
     displayList: displayList,
     displayPost: displayPost,
     initial: initial,
     home:home
   }
- } 
+ },
+  
 ); 
 
 const service = interpret(statechart);
+/*
+ .onTransition(state => { 
+ let currentState = state.value;
+ let query        = state.context.query;
+ let text = `state: ${currentState},${query}`; 
+ loadingBox.show();
+ loadingBox.setContent(text);
+ });
+*/
+
 service.start();
 #+END_SRC
+
 
 ** main
 #+NAME: main 
@@ -346,12 +404,22 @@ function home(arg) {
 }
 
 
-async function displayList(ctx) {
- let a   = ctx.visitedCategory;
- let c   = await  got(`${urlCategories}${a}.json`, gotOptions);
- let d   = await  c.body.topic_list.topics;
+function displayLoading(ctx) {
+  loadingBox.show(); 
+}
+
+function hideLoading() {
+  loadingBox.hide(); 
+}
+
+
+
+
+function displayList(ctx) {
+ let a   = ctx.query;
+ let d   = ctx.datalist.topic_list.topics;
  let e   = d.map(elem => [`${elem.slug}`]);
- 
+
  box.hide();
  box.resetScroll();
  table.setData([[`${a.toUpperCase()}${keyBindingInfo}`]].concat(e)); 
@@ -361,12 +429,10 @@ async function displayList(ctx) {
 }
 
 
-async function displayPost() {
- let a        = table.getItem(table.selected);
- let b        = a.getContent().trimEnd();
- let c        = await  got(`${urlPost}${b}.json`, gotOptions);
- let d        = await  c.body.post_stream.posts;
- let title    = `{yellow-fg}{bold}${c.body.fancy_title}{/bold}{/yellow-fg}\n`;
+function displayPost(ctx) {
+
+ let d        = ctx.datapost.post_stream.posts;
+ let title    = `{yellow-fg}{bold}${ctx.datapost.title}{/bold}{/yellow-fg}\n`;
  let keysInfo = `{right}{green-fg}q=quit h=back j=↓ k=↑{/green-fg}{/right}`;
  let arr      = d.map(elem =>`<h2>${elem.username}</h2><br>${elem.cooked}<br>`);
  let text     = arr.toString();
@@ -382,8 +448,6 @@ async function displayPost() {
 #+END_SRC
 
 
-
-
 * CHECK
 
 #+NAME: check
@@ -394,9 +458,8 @@ echo '';
 
 #+RESULTS: check
 : src/index.js: line 52, col 12, Duplicate key 'scrollbar'.
-: src/index.js: line 133, col 5, Misleading line break before '?'; readers may interpret this as an expression boundary.
 : 
-: 2 errors
+: 1 error
 : 
 
 Comments: 
