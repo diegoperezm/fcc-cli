@@ -11,6 +11,7 @@
 #+BEGIN_SRC sh
 git clone https://github.com/diegoperezm/fcc-cli.git;
 cd fcc-cli/src;
+npm i;
 node index.js 
 #+END_SRC
 
