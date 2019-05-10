@@ -1,5 +1,37 @@
 #+PROPERTY: header-args :results verbatim
 
+* How to use
+
+- clone the repo
+
+- change directory to fcc-cli/src
+
+- node index.js
+  
+#+BEGIN_SRC sh
+git clone https://github.com/diegoperezm/fcc-cli.git;
+cd fcc-cli/src;
+node index.js 
+#+END_SRC
+
+
+* Screenshots
+
+** Index  screen
+
+[[file:./fcc-cli-screenshot.png]]
+
+
+** Category screen
+
+[[file:./fcc-cli-category.png]]
+
+
+** Post screen
+   
+[[file:./fcc-cli-post.png]]
+
+
 * Setup
 
 ** Dependencies
@@ -14,8 +46,19 @@
 
  - html-to-text
 
- * Xstate
+ - Xstate
 
+* Tested on
+
+#+NAME: tested
+#+BEGIN_SRC sh
+node --version;
+lsb_release -a;
+#+END_SRC
+
+- nodejs :  v11.9.0
+
+- Ubuntu:   16.04
 
 * Demo
 
