@@ -217,7 +217,10 @@ service.send({type:'FETCH', query: b});
    on: {
    FETCH: {
       target: 'loadingcategory',
-      actions: [assign({ query: (ctx, event) => event.query})]
+      actions: [
+                 assign({ query: (ctx, event) => event.query}),
+		 displayLoading
+	       ]
     },
    },
   },
@@ -247,7 +250,8 @@ service.send({type:'FETCH', query: b});
  successcategory: {
    on: {
     '': {
-    target: 'postslist' 
+    target: 'postslist',
+    actions: hideLoading
     }
    }
   },
@@ -265,13 +269,16 @@ service.send({type:'FETCH', query: b});
    on: {
     FETCH: {
       target: 'loadingpost',
-      actions: assign({ query: (ctx, event) => event.query})
+      actions: [ 
+                 assign({ query: (ctx, event) => event.query}),
+		 displayLoading
+	       ]
     },
    H: {
      target: "home",
      actions: [home]
     }
-   }
+   },
   },
 #+END_SRC
 
@@ -301,7 +308,8 @@ service.send({type:'FETCH', query: b});
   successpost: {
    on: {
     '': {
-    target: 'post' 
+    target: 'post',
+    actions: hideLoading
     }
    }
   },
@@ -407,6 +415,8 @@ function home(arg) {
 
 function displayLoading(ctx) {
   loadingBox.show(); 
+  // without this, the loadingBox is not shown (maybe a bug?)
+  screen.render();
 }
 
 function hideLoading() {

@@ -166,7 +166,10 @@ const statechart = Machine(
         on: {
           FETCH: {
             target: "loadingcategory",
-            actions: [assign({ query: (ctx, event) => event.query })]
+            actions: [
+              assign({ query: (ctx, event) => event.query }),
+              displayLoading
+            ]
           }
         }
       },
@@ -201,14 +204,16 @@ const statechart = Machine(
       successcategory: {
         on: {
           "": {
-            target: "postslist"
+            target: "postslist",
+            actions: hideLoading
           }
         }
       },
       successpost: {
         on: {
           "": {
-            target: "post"
+            target: "post",
+            actions: hideLoading
           }
         }
       },
@@ -218,7 +223,10 @@ const statechart = Machine(
         on: {
           FETCH: {
             target: "loadingpost",
-            actions: assign({ query: (ctx, event) => event.query })
+            actions: [
+              assign({ query: (ctx, event) => event.query }),
+              displayLoading
+            ]
           },
           H: {
             target: "home",
@@ -283,6 +291,8 @@ function home(arg) {
 
 function displayLoading(ctx) {
   loadingBox.show();
+  // without this, the loadingBox is not shown (maybe a bug?)
+  screen.render();
 }
 
 function hideLoading() {
