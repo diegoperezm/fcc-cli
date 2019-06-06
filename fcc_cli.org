@@ -130,6 +130,8 @@ const Machine        = require('xstate').Machine;
 const interpret      = require('xstate').interpret;
 const actions        = require('xstate').actions;
 const assign         = actions.assign;
+const log            = actions.log;
+
 #+END_SRC
 
 #+NAME: setup
@@ -230,7 +232,7 @@ service.send({type:'FETCH', query: b});
 #+NAME:loadingcategory
 #+BEGIN_SRC js
    loadingcategory: {
-     invoke: {
+    invoke: {
         id: 'getcatID',
         src: (ctx, event) => fetchCategory(ctx, event),
         onDone: {
@@ -259,8 +261,42 @@ service.send({type:'FETCH', query: b});
 
 #+NAME:failure
 #+BEGIN_SRC js
-   failure: {},
+   failure: {
+    onEntry: [displayFailure], 
+    onExit:  [hideFailure], 
+    on: {
+      H: {
+        target: 'home',
+        actions: home
+       },
+      FETCH: {
+        target: 'loadingpost',
+        actions: [ 
+                 assign({ query: (ctx, event) => event.query}),
+		 displayLoading
+	       ]
+      },
+     }
+   },
 #+END_SRC
+
+
+#+NAME:displayfailure
+#+BEGIN_SRC js
+function displayFailure(ctx) {
+ loadingBox.setContent('{center}{yellow-fg}Something went wrong ...{/}'); 
+ loadingBox.show();
+ screen.render();
+}
+
+function hideFailure() {
+  loadingBox.setContent('{center}{yellow-fg}Loading ...{/}'); 
+  loadingBox.hide(); 
+  screen.render();
+}
+
+#+END_SRC
+
 
 #+NAME:postslist
 #+BEGIN_SRC js
@@ -391,6 +427,8 @@ service.start();
 <<options>>
 <<setup>>
 <<statechart>>
+
+<<displayfailure>>
 
 function initial() {
  let a = [[`CATEGORIES${keyBindingInfo}`]].concat(arr);

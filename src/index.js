@@ -95,6 +95,8 @@ const Machine = require("xstate").Machine;
 const interpret = require("xstate").interpret;
 const actions = require("xstate").actions;
 const assign = actions.assign;
+const log = actions.log;
+
 const urlCategories = "https://www.freecodecamp.org/forum/c/";
 const urlPost = "https://www.freecodecamp.org/forum/t/";
 const spc = "            ";
@@ -217,7 +219,23 @@ const statechart = Machine(
           }
         }
       },
-      failure: {},
+      failure: {
+        onEntry: [displayFailure],
+        onExit: [hideFailure],
+        on: {
+          H: {
+            target: "home",
+            actions: home
+          },
+          FETCH: {
+            target: "loadingpost",
+            actions: [
+              assign({ query: (ctx, event) => event.query }),
+              displayLoading
+            ]
+          }
+        }
+      },
       postslist: {
         onEntry: [displayList],
         on: {
@@ -268,6 +286,18 @@ const service = interpret(statechart);
 */
 
 service.start();
+
+function displayFailure(ctx) {
+  loadingBox.setContent("{center}{yellow-fg}Something went wrong ...{/}");
+  loadingBox.show();
+  screen.render();
+}
+
+function hideFailure() {
+  loadingBox.setContent("{center}{yellow-fg}Loading ...{/}");
+  loadingBox.hide();
+  screen.render();
+}
 
 function initial() {
   let a = [[`CATEGORIES${keyBindingInfo}`]].concat(arr);
