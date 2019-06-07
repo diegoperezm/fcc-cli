@@ -123,7 +123,11 @@ const fetchCategory = ctx => {
 };
 
 const fetchPost = ctx => {
-  let url = `${urlPost}${ctx.query}.json`;
+  let a = ctx.datalist.topic_list.topics.filter(
+    elem => elem.title === ctx.query
+  );
+  let b = a[0];
+  let url = `${urlPost}${b.slug}/${b.id}.json`;
   return got(url, gotOptions).then(response => response.body);
 };
 
@@ -332,7 +336,7 @@ function hideLoading() {
 function displayList(ctx) {
   let a = ctx.query;
   let d = ctx.datalist.topic_list.topics;
-  let e = d.map(elem => [`${elem.slug}`]);
+  let e = d.map(elem => [`${elem.title}`]);
 
   box.hide();
   box.resetScroll();
