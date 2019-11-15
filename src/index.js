@@ -1,3 +1,5 @@
+#!/usr/bin/env node 
+
 /* jshint esversion: 8 */
 const gotOptions = {
   json: true,
@@ -363,4 +365,4 @@ function displayPost(ctx) {
   box.show();
   box.focus();
   screen.render();
-}
+ }
