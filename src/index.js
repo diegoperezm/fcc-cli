@@ -1,5 +1,4 @@
-#!/usr/bin/env node 
-
+#!/usr/bin/env node
 /* jshint esversion: 8 */
 const gotOptions = {
   json: true,

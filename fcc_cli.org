@@ -423,8 +423,8 @@ service.start();
 
 
 ** main
-#+NAME: main 
-#+BEGIN_SRC js :noweb yes :tangle ./src/index.js
+#+NAME: main
+#+BEGIN_SRC js :shebang "#!/usr/bin/env node" :noweb yes :tangle ./src/index.js
 /* jshint esversion: 8 */
 <<options>>
 <<setup>>
