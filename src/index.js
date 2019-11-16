@@ -102,21 +102,6 @@ const urlCategories = "https://www.freecodecamp.org/forum/c/";
 const urlPost = "https://www.freecodecamp.org/forum/t/";
 const spc = "            ";
 const keyBindingInfo = `${spc}q=quit h=back j=↓ k=↑ l/enter=select mouse=enabled`;
-const arr = [
-  ["project-feedback"],
-  ["getting-a-developer-job"],
-  ["motivation"],
-  ["javascript"],
-  ["html-css"],
-  ["help"],
-  ["linux-and-git"],
-  ["python"],
-  ["data"],
-  ["contributors"],
-  ["reviews"],
-  ["support"],
-  ["general"]
-];
 
 const fetchCategory = ctx => {
   let url = `${urlCategories}${ctx.query}.json`;
@@ -157,19 +142,27 @@ const statechart = Machine(
       error: "",
       datapost: "",
       datalist: "",
+      dataCategories: "",
       query: ""
     },
     states: {
       first: {
-        onEntry: [initial],
-        on: {
-          "": {
-            target: "home"
+        invoke: {
+          id: "",
+          src: (ctx, event) => fetchArr(ctx, event),
+          onDone: {
+            target: "home",
+            actions: assign({ dataCategories: (ctx, event) => event.data })
+          },
+          onError: {
+            target: "failure",
+            actions: assign({ error: (ctx, event) => event.data })
           }
         }
       },
       home: {
         id: "homeID",
+        onEntry: [initial],
         on: {
           FETCH: {
             target: "loadingcategory",
@@ -304,8 +297,16 @@ function hideFailure() {
   screen.render();
 }
 
-function initial() {
-  let a = [[`CATEGORIES${keyBindingInfo}`]].concat(arr);
+function fetchArr() {
+  let url = "https://www.freecodecamp.org/forum/categories.json";
+  return got(url, gotOptions).then(response => response.body);
+}
+
+function initial(ctx) {
+  let categories = ctx.dataCategories.category_list.categories.map(elem => [
+    `${elem.slug}`
+  ]);
+  let a = [[`CATEGORIES${keyBindingInfo}`]].concat(categories);
   screen.append(box);
   screen.append(table);
   screen.append(loadingBox);
@@ -315,8 +316,11 @@ function initial() {
   screen.render();
 }
 
-function home(arg) {
-  let a = [[`CATEGORIES${keyBindingInfo}`]].concat(arr);
+function home(ctx) {
+  let categories = ctx.dataCategories.category_list.categories.map(elem => [
+    `${elem.slug}`
+  ]);
+  let a = [[`CATEGORIES${keyBindingInfo}`]].concat(categories);
   box.hide();
   table.setData(a);
   table.show();
@@ -364,4 +368,4 @@ function displayPost(ctx) {
   box.show();
   box.focus();
   screen.render();
- }
+}
