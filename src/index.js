@@ -98,24 +98,32 @@ const actions = require("xstate").actions;
 const assign = actions.assign;
 const log = actions.log;
 
-const urlCategories = "https://www.freecodecamp.org/forum/c/";
-const urlPost = "https://www.freecodecamp.org/forum/t/";
 const spc = "            ";
 const keyBindingInfo = `${spc}q=quit h=back j=↓ k=↑ l/enter=select mouse=enabled`;
 
-const fetchCategory = ctx => {
-  let url = `${urlCategories}${ctx.query}.json`;
-  return got(url, gotOptions).then(response => response.body);
-};
+function fetchData(ctx, event, tag) {
+  let url;
+  const urlCat = "https://www.freecodecamp.org/forum/categories.json";
+  const urlCategories = "https://www.freecodecamp.org/forum/c/";
+  const urlPost = "https://www.freecodecamp.org/forum/t/";
 
-const fetchPost = ctx => {
-  let a = ctx.datalist.topic_list.topics.filter(
-    elem => elem.title === ctx.query
-  );
-  let b = a[0];
-  let url = `${urlPost}${b.slug}/${b.id}.json`;
+  switch (tag) {
+    case "fetchArr":
+      url = urlCat;
+      break;
+    case "fetchCategory":
+      url = `${urlCategories}${ctx.query}.json`;
+      break;
+    case "fetchPost":
+      let a = ctx.datalist.topic_list.topics.filter(
+        elem => elem.title === ctx.query
+      );
+      let b = a[0];
+      url = `${urlPost}${b.slug}/${b.id}.json`;
+      break;
+  }
   return got(url, gotOptions).then(response => response.body);
-};
+}
 
 // Quit on Escape, q, or Control-C.
 screen.key(["escape", "q", "C-c"], function(ch, key) {
@@ -148,8 +156,8 @@ const statechart = Machine(
     states: {
       first: {
         invoke: {
-          id: "",
-          src: (ctx, event) => fetchArr(ctx, event),
+          id: "firstID",
+          src: (ctx, event) => fetchData(ctx, event, "fetchArr"),
           onDone: {
             target: "home",
             actions: assign({ dataCategories: (ctx, event) => event.data })
@@ -176,7 +184,7 @@ const statechart = Machine(
       loadingcategory: {
         invoke: {
           id: "getcatID",
-          src: (ctx, event) => fetchCategory(ctx, event),
+          src: (ctx, event) => fetchData(ctx, event, "fetchCategory"),
           onDone: {
             target: "successcategory",
             actions: assign({ datalist: (ctx, event) => event.data })
@@ -190,7 +198,7 @@ const statechart = Machine(
       loadingpost: {
         invoke: {
           id: "getpostID",
-          src: (ctx, event) => fetchPost(ctx, event),
+          src: (ctx, event) => fetchData(ctx, event, "fetchPost"),
           onDone: {
             target: "successpost",
             actions: [assign({ datapost: (ctx, event) => event.data })]
@@ -295,11 +303,6 @@ function hideFailure() {
   loadingBox.setContent("{center}{yellow-fg}Loading ...{/}");
   loadingBox.hide();
   screen.render();
-}
-
-function fetchArr() {
-  let url = "https://www.freecodecamp.org/forum/categories.json";
-  return got(url, gotOptions).then(response => response.body);
 }
 
 function initial(ctx) {

@@ -31,7 +31,7 @@ https://www.freecodecamp.org/forum/categories.json
  
 
 *  JS 
-
+  
 ** options
 #+NAME: options
 #+BEGIN_SRC js
@@ -144,24 +144,10 @@ const box            = blessed.box(boxOptions);
 const loadingBox     = blessed.box(loadingBoxOptions);
 const htmlToText     = require('html-to-text');
 <<statechartsetup>>
-const urlCategories  = 'https://www.freecodecamp.org/forum/c/';
-const urlPost        = 'https://www.freecodecamp.org/forum/t/';
 const spc            = '            ';
 const keyBindingInfo = `${spc}q=quit h=back j=↓ k=↑ l/enter=select mouse=enabled`;
 
-const fetchCategory = (ctx) =>{
- let url = `${urlCategories}${ctx.query}.json` ;
- return  got(url , gotOptions).then(response => response.body);
-}
-
-const fetchPost     = (ctx) =>{
- let a   = ctx.datalist.topic_list.topics.filter(elem => elem.title === ctx.query)
- let b   = a[0];
- let url = `${urlPost}${b.slug}/${b.id}.json` ;
- return  got(url , gotOptions).then(response => response.body);
-}
-
-
+<<fetchData>>
 
 // Quit on Escape, q, or Control-C.
 screen.key(['escape', 'q', 'C-c'], function(ch, key) {
@@ -191,8 +177,8 @@ service.send({type:'FETCH', query: b});
 #+BEGIN_SRC js
   first: {
    invoke: {
-    id: '',
-    src: (ctx, event) => fetchArr(ctx, event),
+    id: 'firstID',
+    src: (ctx, event) => fetchData(ctx, event,'fetchArr'),
     onDone: {
       target: 'home',
       actions: assign({ dataCategories: (ctx, event) => event.data}),
@@ -228,7 +214,7 @@ service.send({type:'FETCH', query: b});
    loadingcategory: {
     invoke: {
         id: 'getcatID',
-        src: (ctx, event) => fetchCategory(ctx, event),
+        src: (ctx, event) => fetchData(ctx, event, 'fetchCategory'),
         onDone: {
           target: 'successcategory',
           actions: assign({ datalist: (ctx, event) => event.data}),
@@ -317,7 +303,7 @@ function hideFailure() {
    loadingpost: {
      invoke: {
         id: 'getpostID',
-        src: (ctx, event) => fetchPost(ctx, event),
+        src: (ctx, event) => fetchData(ctx, event,'fetchPost'),
         onDone: {
           target: 'successpost',
           actions:  [
@@ -415,6 +401,37 @@ service.start();
 #+END_SRC
 
 
+** generic function
+
+*** fetch
+#+NAME: fetchData
+#+BEGIN_SRC js
+function fetchData(ctx, event, tag) {
+ let url;
+ const urlCat = "https://www.freecodecamp.org/forum/categories.json";
+ const urlCategories = "https://www.freecodecamp.org/forum/c/";
+ const urlPost = "https://www.freecodecamp.org/forum/t/";
+    
+ switch(tag){
+   case 'fetchArr':
+     url = urlCat;
+     break;
+    case 'fetchCategory':
+     url = `${urlCategories}${ctx.query}.json`;
+     break;
+    case 'fetchPost':
+     let a = ctx.datalist.topic_list.topics.filter(
+       elem => elem.title === ctx.query
+     );
+     let b = a[0];
+     url = `${urlPost}${b.slug}/${b.id}.json`;
+     break;
+ }
+  return got(url, gotOptions).then(response => response.body);
+}
+#+END_SRC
+
+
 ** main
 #+NAME: main
 #+BEGIN_SRC js :shebang "#!/usr/bin/env node" :noweb yes :tangle ./src/index.js
@@ -425,11 +442,7 @@ service.start();
 
 <<displayfailure>>
 
-function fetchArr() {
- let url = 'https://www.freecodecamp.org/forum/categories.json';
- return  got(url , gotOptions).then(response => response.body);
 
-}
 
 function initial(ctx) {
  let categories = ctx.dataCategories.category_list.categories.map(elem => [`${elem.slug}`]);
@@ -524,6 +537,8 @@ Comments:
 #+BEGIN_SRC  sh :exports none   :dir ./src/
 npm run prettier;
 #+END_SRC
+
+#+RESULTS: prettier
 
 
 
