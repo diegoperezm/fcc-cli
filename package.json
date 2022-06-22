@@ -15,7 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "blessed": "^0.1.81",
-    "got": "^9.6.0",
+    "got": "^11.8.5",
     "html-to-text": "^5.1.1",
     "xstate": "^4.5.0"
   },
